@@ -1,0 +1,198 @@
+---
+title: "Get Started With data.table (DT)"
+author: "SunnyBingoMe"
+date: "2016-06-29"
+output: 
+    github_document: 
+        toc: true
+# output: github_document
+# output: html_document 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+See also [Notes of Practical Machine Learning - Coursera](http://tdd.nu/pml-notes) for ML and ggplot related commands.
+
+The official "Getting Started" is [here](https://github.com/Rdatatable/data.table/wiki/Getting-started).
+
+# DT Key Ideas
+1. `data.table` is an extension of `data.frame`, it is capable of df
+2. DT's syntax is similar to SQL: `DT[i, j, by]` = sql query `[where, select, group_by]`
+i.e. `[WHERE_condition_of_rows, SELECT_of_columns, GROUP_BY_a_categorical_variable]`
+
+# DT Basic Commands
+
+## prepare data for commands
+```{r init, message=FALSE, warning=FALSE}
+library(data.table)
+library(dplyr)
+```
+
+```{r load data, message=FALSE, warning=FALSE, cache=TRUE}
+system.time((dt = fread("D:/hNow/Dropbox/Github/r_data_table_start/gb_code.csv")))
+summary(dt)
+head(dt)
+```
+
+## subset
+```{r subset rows, cache=TRUE}
+# subset rows
+subset_rows = dt[V4 == "England" & V3 == "Beswick" & V10 < 53.93]
+subset_rows
+```
+
+```{r subset cols, cache=TRUE}
+# subset cols
+subset_cols = dt[ , .(V2,V4)]
+head(subset_cols)
+nrow(subset_cols)
+```
+
+wrong example using ` : `
+```{r subset cols wrong, eval=FALSE}
+subset_cols = dt[ , .(V2:V4)] # wrong !!!
+```
+
+## order/sort
+```{r order, cache=TRUE}
+dt_order = dt[order(V4, -V8)] # radix sort, so it is fast
+```
+
+## column actions
+add, update, delete, etc.
+tip: ` := `
+
+### add (or unconditional update of all rows in a column):
+```{r col add, cache=TRUE}
+dt[ , V18 := V10 + V11]
+head(dt)
+
+dt[ , V19 := 'this-is-NEW.col']
+head(dt)
+
+system.time(
+dt[ , V20 := paste(V18, V19, sep = "_")] # expensive, system.time = 16s. see also 'OBS' below
+)
+head(dt)
+```
+
+### update (with WHERE condition):
+```{r col update}
+dt[V8 == "Aberdeen City", V8 := "updated city name"]
+head(dt)
+```
+
+### delete:
+```{r col del}
+# delete one col
+dt[ , V18 := NULL]
+head(dt)
+
+# delete multi cols (must use their names)
+dt[ , c('V19', 'V20') := NULL]
+head(dt)
+```
+
+wrong format of delete:
+```{r col del wrong, eval=FALSE}
+dt[ , .(V11, V12) := NULL] # wrong !!!
+dt[ , c(V11, V12) := NULL] # wrong !!!
+```
+
+### combine all tasks (just need to put `[]`s together):
+```{r}
+dt[V8 == "Aberdeen City", V8 := "updated_city"][ , V_New := V10 + V11][ , c("V6","V7") := NULL]
+head(dt)
+```
+
+# DT Aggregate
+(compute functions while grouping)
+```{r}
+summary(dt$V_New)
+unique(dt$V4)
+
+# calculate a "func"
+dt[V_New >= 50, mean(V10), by = V4]
+
+# named calculation in "func", instead of auto-named as 'V1', 'V2' ...
+# OBS:  .()  is necessary, otherwise confusion with arg of dt
+dt[V_New >= 50, .(averaged_result = mean(V10)), by = V4]
+
+# multi-calculation
+dt[V_New >= 50, .(sum(V10), mean(V10), .N), by = V4]
+
+# multi-calculation with names in "func" and func in "by"
+dt[V_New >= 50, .(sumTotal = sum(V10), avr = mean(V10), countNr = .N), by = substr(V4, 1,1)]
+```
+
+# Performance DT vs dplyr
+```{r}
+# data.table
+system.time((
+dt[V_New >= 50, .(sumTotal = sum(V10), avr = mean(V10), countNr = .N), by = substr(V4, 1,1)]
+))
+
+# base::aggregate
+system.time({
+mainDataDf = subset(dt, V_New >= 50)
+summary_t = as.data.frame(as.list(aggregate(
+    cbind(V10)
+    ~ substr(V4, 1,1)
+    ,data = mainDataDf
+    ,FUN=function(mainDataDf) c(sumTotal = sum(mainDataDf), avr = mean(mainDataDf), countNr = length(mainDataDf))
+)))
+})
+summary_t
+
+# dplyr::summarise
+system.time({
+mainDataDf = subset(dt, V_New >= 50)
+mainDataDf$t = substr(mainDataDf$V4, 1,1)
+summary_t = summarise(group_by(mainDataDf, t),
+                      sumTotal = sum(V10),
+                      avr = mean(V10),
+                      countNr = n())
+mainDataDf$t = NULL
+})
+summary_t
+
+# pip-ed dplyr::summarise
+system.time({
+summary_t = dt %>%
+    filter(V_New >= 50) %>%
+    mutate(t = substr(V4, 1,1)) %>%
+    group_by(t) %>%
+    summarise(sumTotal = sum(V10),
+              avr = mean(V10),
+              countNr = n())
+})
+summary_t
+```
+
+Note: the results are the same, but rwos in different order.
+To make exactly the same, we can use `base::order()` and `dplyr::arrange()`.
+
+## io performance
+* `dt = fread("data.csv")` 10x faster than `read.csv("data.csv")`.
+* `fwrite()` is faster than `write.csv()`. 
+
+# DT Other Useful Features
+* automatic indexing
+* rolling joins
+* overlapping range joins 
+* and a lot more ...
+
+
+# OBS
+## cat/paste in `[]`
+`paste` works fine.
+wrong usage of `cat`:
+```{r cat disaster, eval=FALSE}
+system.time(dt[ , V20 := cat(V18, V19)])  # wrong !!!
+# this will print all cat-results in console, and NOT adding/updating any column
+```
+
+# Ref
+[ref](https://www.evernote.com/shard/s144/sh/4b76e1d6-20e0-476c-8c40-aaf32a62a75e/b9f375de89da3229)

@@ -1,3 +1,6 @@
+*.csv
+r_data_table_start_cache/
+
 # History files
 .Rhistory
 .Rapp.history
