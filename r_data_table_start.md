@@ -23,6 +23,8 @@ SunnyBingoMe
 
 See also [Notes of Practical Machine Learning - Coursera](http://tdd.nu/pml-notes) for ML and ggplot related commands.
 
+The official "Getting Started" is [here](https://github.com/Rdatatable/data.table/wiki/Getting-started).
+
 DT Key Ideas
 ============
 
@@ -274,26 +276,25 @@ head(dt)
     ## 4: GB AB10 1AF George St/Harbour Ward Scotland SCT                 
     ## 5: GB AB10 1AG George St/Harbour Ward Scotland SCT                 
     ## 6: GB AB10 1AH George St/Harbour Ward Scotland SCT                 
-    ##                   V8        V9      V10       V11 V12      V18
-    ## 1:                                   NA        NA   4       NA
-    ## 2: updated city name S12000033 57.14823 -2.096648   6 55.05158
-    ## 3: updated city name S12000033 57.14960 -2.096916   6 55.05269
-    ## 4: updated city name S12000033 57.14870 -2.097806   6 55.05090
-    ## 5: updated city name S12000033 57.14823 -2.096648   6 55.05158
-    ## 6: updated city name S12000033 57.14808 -2.094664   6 55.05341
-    ##                V19                              V20
-    ## 1: this-is-NEW.col               NA_this-is-NEW.col
-    ## 2: this-is-NEW.col   55.05158022833_this-is-NEW.col
-    ## 3: this-is-NEW.col 55.0526863914458_this-is-NEW.col
-    ## 4: this-is-NEW.col 55.0508972975867_this-is-NEW.col
-    ## 5: this-is-NEW.col   55.05158022833_this-is-NEW.col
-    ## 6: this-is-NEW.col 55.0534126323586_this-is-NEW.col
+    ##                   V8        V9      V10       V11 V12
+    ## 1:                                   NA        NA   4
+    ## 2: updated city name S12000033 57.14823 -2.096648   6
+    ## 3: updated city name S12000033 57.14960 -2.096916   6
+    ## 4: updated city name S12000033 57.14870 -2.097806   6
+    ## 5: updated city name S12000033 57.14823 -2.096648   6
+    ## 6: updated city name S12000033 57.14808 -2.094664   6
 
 ### delete:
 
 ``` r
 # delete one col
 dt[ , V18 := NULL]
+```
+
+    ## Warning in `[.data.table`(dt, , `:=`(V18, NULL)): Adding new column 'V18'
+    ## then assigning NULL (deleting it).
+
+``` r
 head(dt)
 ```
 
@@ -304,24 +305,26 @@ head(dt)
     ## 4: GB AB10 1AF George St/Harbour Ward Scotland SCT                 
     ## 5: GB AB10 1AG George St/Harbour Ward Scotland SCT                 
     ## 6: GB AB10 1AH George St/Harbour Ward Scotland SCT                 
-    ##                   V8        V9      V10       V11 V12             V19
-    ## 1:                                   NA        NA   4 this-is-NEW.col
-    ## 2: updated city name S12000033 57.14823 -2.096648   6 this-is-NEW.col
-    ## 3: updated city name S12000033 57.14960 -2.096916   6 this-is-NEW.col
-    ## 4: updated city name S12000033 57.14870 -2.097806   6 this-is-NEW.col
-    ## 5: updated city name S12000033 57.14823 -2.096648   6 this-is-NEW.col
-    ## 6: updated city name S12000033 57.14808 -2.094664   6 this-is-NEW.col
-    ##                                 V20
-    ## 1:               NA_this-is-NEW.col
-    ## 2:   55.05158022833_this-is-NEW.col
-    ## 3: 55.0526863914458_this-is-NEW.col
-    ## 4: 55.0508972975867_this-is-NEW.col
-    ## 5:   55.05158022833_this-is-NEW.col
-    ## 6: 55.0534126323586_this-is-NEW.col
+    ##                   V8        V9      V10       V11 V12
+    ## 1:                                   NA        NA   4
+    ## 2: updated city name S12000033 57.14823 -2.096648   6
+    ## 3: updated city name S12000033 57.14960 -2.096916   6
+    ## 4: updated city name S12000033 57.14870 -2.097806   6
+    ## 5: updated city name S12000033 57.14823 -2.096648   6
+    ## 6: updated city name S12000033 57.14808 -2.094664   6
 
 ``` r
 # delete multi cols (must use their names)
 dt[ , c('V19', 'V20') := NULL]
+```
+
+    ## Warning in `[.data.table`(dt, , `:=`(c("V19", "V20"), NULL)): Adding new
+    ## column 'V19' then assigning NULL (deleting it).
+
+    ## Warning in `[.data.table`(dt, , `:=`(c("V19", "V20"), NULL)): Adding new
+    ## column 'V20' then assigning NULL (deleting it).
+
+``` r
 head(dt)
 ```
 
@@ -349,6 +352,8 @@ dt[ , c(V11, V12) := NULL] # wrong !!!
 
 ### combine all tasks (just need to put `[]`s together):
 
+this is called "chaining" [official doc](https://rawgit.com/wiki/Rdatatable/data.table/vignettes/datatable-keys-fast-subset.html)
+
 ``` r
 dt[V8 == "Aberdeen City", V8 := "updated_city"][ , V_New := V10 + V11][ , c("V6","V7") := NULL]
 head(dt)
@@ -372,7 +377,7 @@ head(dt)
 DT Aggregate
 ============
 
-(compute functions while grouping)
+Aggregation computes functions while grouping.
 
 ``` r
 summary(dt$V_New)
@@ -440,7 +445,7 @@ dt[V_New >= 50, .(sumTotal = sum(V10), avr = mean(V10), countNr = .N), by = subs
 ```
 
     ##    user  system elapsed 
-    ##    0.12    0.00    0.12
+    ##    0.13    0.01    0.14
 
 ``` r
 # base::aggregate
@@ -456,7 +461,7 @@ summary_t = as.data.frame(as.list(aggregate(
 ```
 
     ##    user  system elapsed 
-    ##   12.99    0.16   13.28
+    ##   13.30    0.25   13.63
 
 ``` r
 summary_t
@@ -481,7 +486,7 @@ mainDataDf$t = NULL
 ```
 
     ##    user  system elapsed 
-    ##    0.67    0.25    0.94
+    ##    1.49    0.24    1.71
 
 ``` r
 summary_t
@@ -508,7 +513,7 @@ summary_t = dt %>%
 ```
 
     ##    user  system elapsed 
-    ##    0.25    0.09    0.34
+    ##    0.35    0.09    0.45
 
 ``` r
 summary_t

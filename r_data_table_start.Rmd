@@ -3,7 +3,7 @@ title: "Get Started With data.table (DT)"
 author: "SunnyBingoMe"
 date: "2016-06-29"
 output: 
-    github_document: 
+    html_document: 
         toc: true
 # output: github_document
 # output: html_document 
@@ -102,13 +102,14 @@ dt[ , c(V11, V12) := NULL] # wrong !!!
 ```
 
 ### combine all tasks (just need to put `[]`s together):
+this is called "chaining" [official doc](https://rawgit.com/wiki/Rdatatable/data.table/vignettes/datatable-keys-fast-subset.html)
 ```{r}
 dt[V8 == "Aberdeen City", V8 := "updated_city"][ , V_New := V10 + V11][ , c("V6","V7") := NULL]
 head(dt)
 ```
 
 # DT Aggregate
-(compute functions while grouping)
+Aggregation computes functions while grouping.
 ```{r}
 summary(dt$V_New)
 unique(dt$V4)
