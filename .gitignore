@@ -1,5 +1,7 @@
 *.csv
-r_data_table_start_cache/
+*_cache/
+rsconnect
+
 
 # History files
 .Rhistory

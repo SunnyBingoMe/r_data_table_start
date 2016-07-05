@@ -1,0 +1,132 @@
+---
+title: "Join, as DB Tables"
+author: "SunnyBingoMe"
+date: "2016-06-29"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Prepare Data
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(readr)
+library(data.table)
+hero = "
+name,       alignment, gender,   publisher
+Magneto,    bad,       male,     MarvelDuplicate
+Storm,      good,      female,   MarvelDuplicate
+Batman,     good,      male,     DC
+Joker,      bad,       male,     DC
+Catwoman,   bad,       female,   DC
+Hellboy,    good,      male,     Dark Horse Comics
+"
+hero = read_csv(hero, trim_ws = TRUE, skip = 1)
+hero = data.table(hero)
+
+publisher = "
+publisher,   yr_founded
+DC,              1934
+MarvelDuplicate, 1939
+MarvelDuplicate, 8888
+Image,           1992
+"
+publisher = read_csv(publisher, trim_ws = TRUE, skip = 1)
+publisher = data.table(publisher)
+```
+
+__For all the `join` commands, if a key is set for both dt, then `on = 'key_col_name'` can be elided.__
+
+WARN: row orders are not guaranteed
+
+-----------
+
+# Left-Join & Inner-Join
+left-join will keep all left-side table rows, including no-matched rows
+
+__by default, nomatch cells := NA__
+```{r, eval=FALSE}
+hero[publisher, on = "publisher"]
+```
+```{r, echo=FALSE, cache=TRUE}
+t = hero[publisher, on = "publisher"]
+knitr::kable(t)
+```
+
+__nomatch = 0 means delete no-matched rows__ (becomes inner-join)
+```{r, eval=FALSE}
+hero[publisher, nomatch = 0, on = "publisher"]
+```
+```{r, echo=FALSE, cache=TRUE}
+t = hero[publisher, nomatch = 0, on = "publisher"]
+knitr::kable(t)
+```
+
+
+-----------
+
+# Right-Join & Inner, all = TRUE
+right-join will keep all right-side table rows, unfortunately, we have to __swap two data.table's__ to make a right-join (using left-join format)
+```{r, eval=FALSE}
+publisher[hero, on = "publisher"]
+```
+```{r, echo=FALSE, cache=TRUE}
+t = publisher[hero, on = "publisher"]
+knitr::kable(t)
+```
+
+__nomatch = 0 means delete no-matched rows__ (becomes inner-join again, with row & col orders may diff from the left-join's inner-join)
+
+
+-----------
+
+# Outer-/Full-Join & Inner-Join
+
+Outer-(or full-) join will keep both tables content, with extra NA's
+
+we need function `merge`
+```{r, eval=FALSE}
+merge(hero, publisher, by = "publisher", all = TRUE)
+```
+```{r, echo=FALSE, cache=TRUE}
+t = merge(hero, publisher, by = "publisher", all = TRUE)
+knitr::kable(t)
+```
+
+if not `all` content is kept, it becomes inner-join, again.
+```{r, eval=FALSE}
+merge(hero, publisher, by = "publisher")
+```
+```{r, echo=FALSE, cache=TRUE}
+t = merge(hero, publisher, by = "publisher")
+knitr::kable(t)
+```
+
+-----------
+
+# Semi-Join (Only Keep Half Side Content)
+```{r, cache=TRUE, results='hide'}
+index = unique(hero[publisher, on = "publisher", which=TRUE, allow.cartesian=TRUE])
+hero[index]
+```
+```{r, echo=FALSE, cache=TRUE}
+t = hero[index]
+knitr::kable(t)
+```
+
+you can add `nomatch = 0`
+
+-----------
+ref:
+
+[data](http://stat545.com/bit001_dplyr-cheatsheet.html)
+
+[semi-Join](http://stackoverflow.com/questions/18969420/perform-a-semi-join-with-data-table)
+
+[SQL Join, chart explained](http://stackoverflow.com/questions/5706437/whats-the-difference-between-inner-join-left-join-right-join-and-full-join)
+
+```{r}
+devtools::session_info()
+```
+
