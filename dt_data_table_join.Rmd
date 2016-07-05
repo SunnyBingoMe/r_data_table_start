@@ -118,6 +118,14 @@ knitr::kable(t)
 you can add `nomatch = 0`
 
 -----------
+
+# Anti-Join
+
+-----------
+
+# Cross-Join
+
+-----------
 ref:
 
 [data](http://stat545.com/bit001_dplyr-cheatsheet.html)
