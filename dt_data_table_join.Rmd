@@ -1,5 +1,5 @@
 ---
-title: "Join, as DB Tables"
+title: "Join DT Tables, Similar to DB Tables"
 author: "SunnyBingoMe"
 date: "2016-06-29"
 output: rmarkdown::html_vignette
@@ -85,7 +85,7 @@ __nomatch = 0 means delete no-matched rows__ (becomes inner-join again, with row
 
 Outer-(or full-) join will keep both tables content, with extra NA's
 
-we need function `merge`
+we need function `merge`; __param is `by = 'key_name'`, NOT `on`.__
 ```{r, eval=FALSE}
 merge(hero, publisher, by = "publisher", all = TRUE)
 ```
@@ -105,6 +105,38 @@ knitr::kable(t)
 
 -----------
 
+
+# Anti-Join
+
+Give the rows that only exist on left-table
+```{r, eval=FALSE}
+hero[!publisher, on = "publisher"]
+```
+```{r, echo=FALSE, cache=TRUE}
+t = hero[!publisher, on = "publisher"]
+knitr::kable(t)
+```
+```{r, eval=FALSE}
+publisher[!hero, on = "publisher"]
+```
+```{r, echo=FALSE}
+t = publisher[!hero, on = "publisher"]
+knitr::kable(t)
+```
+-----------
+
+# Cross-Join
+
+Give the multiplied rows like matrix-multiplication.
+
+`nrow(new_table) := nrow(left_table) * nrow(right_table)`
+
+![cross join](https://wwqkow.by3301.livefilestore.com/y3mxJujXfF8kzYBxQcD0sDfTBVRteKl7x1cseGRSZ7H3TbIbUaOtUZ8Ktl5Dqof4aEAZ3FWKaVd8vR4C8_RhiqV_9CXTQkBlXZkEInbVc4DYnI7uQU7ehIxNWxq-jwstpOChP3bMy-EZaKXXUBkYJPwhLzHKMfpMUwEt60RQR_cLmQ/CROSS-JOIN.jpg?psid=1)
+
+[ref](http://sqlhints.com/tag/cross-join/)
+
+-----------
+
 # Semi-Join (Only Keep Half Side Content)
 ```{r, cache=TRUE, results='hide'}
 index = unique(hero[publisher, on = "publisher", which=TRUE, allow.cartesian=TRUE])
@@ -117,18 +149,22 @@ knitr::kable(t)
 
 you can add `nomatch = 0`
 
------------
-
-# Anti-Join
 
 -----------
 
-# Cross-Join
+# Self-Join
+
+Self-join has [not been implemented for DT yet](http://stackoverflow.com/questions/14983805/how-to-self-join-a-data-table-on-a-condition). A `for loop` or some other methods are necessary. 
+
+See self-join definition [here](http://sqlhints.com/tag/cross-join/). 
+
+See examples & solutions for DT  [here](http://stackoverflow.com/questions/3362038/what-is-self-join-and-when-would-you-use-it)
 
 -----------
+
 ref:
 
-[data](http://stat545.com/bit001_dplyr-cheatsheet.html)
+[data source](http://stat545.com/bit001_dplyr-cheatsheet.html), which is modified here.
 
 [semi-Join](http://stackoverflow.com/questions/18969420/perform-a-semi-join-with-data-table)
 
